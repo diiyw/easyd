@@ -6,11 +6,14 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 )
 
 var DeployToken string
 
 func main() {
+	u, _ := user.Current()
+	log.Println("run with:", u.Username)
 
 	// specified deploy token
 	if len(os.Args) > 1 {
