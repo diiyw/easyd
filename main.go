@@ -56,6 +56,7 @@ func deployHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var cacheID = time.Now().Format("2006010215040506")
+	var cacheDir string
 	// deploy with file
 	upload, uploadHeader, err := req.FormFile("file")
 	if err == nil {
@@ -65,7 +66,7 @@ func deployHandler(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		_ = fi.Close()
+		defer fi.Close()
 		if _, err := io.Copy(fi, upload); err != nil {
 			_, err := w.Write([]byte(err.Error()))
 			if err != nil {
@@ -75,7 +76,9 @@ func deployHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		// unzip
 		fileExt := path.Ext(filename)
-		if err := Unzip(dir+"/data/"+filename, dir+"/cache/"+strings.TrimSuffix(filename, fileExt)); err != nil {
+		cacheDir = dir + "/cache/" + strings.TrimSuffix(filename, fileExt)
+		_, _ = w.Write([]byte("unzip to \"" + cacheDir + "\"\r\n"))
+		if err := Unzip(dir+"/data/"+filename, cacheDir); err != nil {
 			_, err := w.Write([]byte(err.Error()))
 			if err != nil {
 				log.Println(err)
@@ -85,7 +88,7 @@ func deployHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	cmd := &exec.Cmd{}
-	cmd = exec.Command(dir+"/scripts/"+script+".sh", cacheID)
+	cmd = exec.Command(dir+"/scripts/"+script+".sh", cacheDir)
 	cmd.Stdout = w
 	if err := cmd.Start(); err != nil {
 		_, err := w.Write([]byte(fmt.Sprintf("run script with error: %s ", err)))
