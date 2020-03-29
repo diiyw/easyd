@@ -87,7 +87,8 @@ func deployHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	cmd := exec.Command(".", dir+"/scripts/"+script+".sh", cacheDir)
+	cmd := exec.Command(script+".sh", cacheDir)
+	cmd.Dir = dir + "/scripts"
 	cmd.Stdout = w
 	if err := cmd.Start(); err != nil {
 		_, err := w.Write([]byte(fmt.Sprintf("run script with error: %s ", err)))
